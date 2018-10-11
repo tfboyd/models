@@ -78,8 +78,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
                              kernel_regularizer=
                              tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                              bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                            (x)
+                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -91,8 +90,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
                              kernel_regularizer=
                              tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                              bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                            (x)
+                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -137,8 +135,7 @@ def conv_block(input_tensor,
                              kernel_regularizer=
                              tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                              bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                            (input_tensor)
+                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(input_tensor)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -150,8 +147,7 @@ def conv_block(input_tensor,
                              kernel_regularizer=
                              tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                              bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                            (x)
+                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -163,8 +159,7 @@ def conv_block(input_tensor,
                              kernel_regularizer=
                              tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                              bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                            (x)
+                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -175,8 +170,7 @@ def conv_block(input_tensor,
                                     kernel_regularizer=
                                     tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
                                     bias_regularizer=
-                                    tf.keras.regularizers.l2(L2_WEIGHT_DECAY))
-                                   (input_tensor)
+                                    tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(input_tensor)
   shortcut = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
                                                 epsilon=BATCH_NORM_EPSILON,
                                                 name=bn_name_base + '1')(shortcut)
