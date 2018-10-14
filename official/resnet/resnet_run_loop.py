@@ -304,13 +304,9 @@ def resnet_model_fn(features, labels, mode, model_class,
       # loss is computed using fp32 for numerical stability.
       [tf.nn.l2_loss(tf.cast(v, tf.float32)) for v in tf.trainable_variables()
        if loss_filter_fn(v.name)])
-  if use_keras_model:
-    # Don't add l2 loss for the keras model since we already specify
-    # l2 loss as part of the layer.
-    loss = cross_entropy
-  else:
-    tf.summary.scalar('l2_loss', l2_loss)
-    loss = cross_entropy + l2_loss
+  
+  tf.summary.scalar('l2_loss', l2_loss)
+  loss = cross_entropy + l2_loss
 
   if mode == tf.estimator.ModeKeys.TRAIN:
     global_step = tf.train.get_or_create_global_step()
