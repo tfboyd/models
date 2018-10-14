@@ -259,6 +259,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   assert features.dtype == dtype
 
   if use_keras_model:
+    print("Using Keras ResNet50 1.5 model.")
     model = keras_resnet_model.ResNet50(classes=num_classes, weights=None)
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
@@ -304,7 +305,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       # loss is computed using fp32 for numerical stability.
       [tf.nn.l2_loss(tf.cast(v, tf.float32)) for v in tf.trainable_variables()
        if loss_filter_fn(v.name)])
-  
+
   tf.summary.scalar('l2_loss', l2_loss)
   loss = cross_entropy + l2_loss
 
