@@ -35,11 +35,15 @@ _NUM_CHANNELS = 3
 _NUM_CLASSES = 1001
 
 _NUM_IMAGES = {
-    'train': 1281167,
-    'validation': 50000,
+    # 'train': 1281167,
+    'train': 6255,
+    # 'validation': 50000,
+    'validation': 1953
 }
 
-_NUM_TRAIN_FILES = 1024
+# _NUM_TRAIN_FILES = 1024
+_NUM_TRAIN_FILES = 5
+_NUM_VALIDATION_FILES = 5
 _SHUFFLE_BUFFER = 10000
 
 DATASET_NAME = 'ImageNet'
@@ -57,7 +61,7 @@ def get_filenames(is_training, data_dir):
   else:
     return [
         os.path.join(data_dir, 'validation-%05d-of-00128' % i)
-        for i in range(128)]
+        for i in range(_NUM_VALIDATION_FILES)]
 
 
 def _parse_example_proto(example_serialized):
@@ -326,7 +330,8 @@ def imagenet_model_fn(features, labels, mode, params):
       loss_scale=params['loss_scale'],
       loss_filter_fn=None,
       dtype=params['dtype'],
-      fine_tune=params['fine_tune']
+      fine_tune=params['fine_tune'],
+      use_keras_model=params['use_keras_model']
   )
 
 
