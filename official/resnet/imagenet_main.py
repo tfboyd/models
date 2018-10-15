@@ -36,7 +36,8 @@ _NUM_CLASSES = 1001
 
 _NUM_IMAGES = {
     'train': 1281167,
-    'validation': 50000,
+    'train': 1281167,
+    # 'validation': 50000,
 }
 
 _NUM_TRAIN_FILES = 1024
@@ -56,7 +57,7 @@ def get_filenames(is_training, data_dir):
         for i in range(_NUM_TRAIN_FILES)]
   else:
     return [
-        os.path.join(data_dir, 'validation-%05d-of-00128' % i)
+        os.path.join(data_dir, 'train-%05d-of-01024' % i)
         for i in range(128)]
 
 
