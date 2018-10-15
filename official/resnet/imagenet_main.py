@@ -61,7 +61,7 @@ def get_filenames(is_training, data_dir):
         for i in range(_NUM_TRAIN_FILES)]
   else:
     return [
-        os.path.join(data_dir, 'validation-%05d-of-00128' % i)
+        os.path.join(data_dir, 'train-%05d-of-01024' % i)
         for i in range(_NUM_VALIDATION_FILES)]
 
 
