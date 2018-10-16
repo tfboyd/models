@@ -265,7 +265,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
-
+  
+  tf.print(model.get_weights())
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
@@ -547,8 +548,9 @@ def resnet_main(
     # eval (which is generally unimportant in those circumstances) to terminate.
     # Note that eval will run for max_train_steps each loop, regardless of the
     # global_step count.
-    eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=flags_obj.max_train_steps)
+    # TODO(anjalisridhar): Not evaluating
+    # eval_results = classifier.evaluate(input_fn=input_fn_eval,
+    #                                    steps=flags_obj.max_train_steps)
 
     benchmark_logger.log_evaluation_result(eval_results)
 
