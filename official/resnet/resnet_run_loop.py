@@ -265,8 +265,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
-  
-  tf.print(model.get_weights())
+
+  print("Model weights ", model.get_weights())
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
