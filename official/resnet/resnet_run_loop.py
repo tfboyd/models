@@ -266,7 +266,7 @@ def resnet_model_fn(features, labels, mode, model_class,
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
 
-  if mode == tf.estimator.ModeKeys.EVALUATE:
+  if mode != tf.estimator.ModeKeys.TRAIN:
     print("Model weights for evaluation ", model.get_weights()[0])
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
