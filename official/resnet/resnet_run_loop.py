@@ -271,11 +271,11 @@ def resnet_model_fn(features, labels, mode, model_class,
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
   if use_keras_model:
     for l in model.layers:
-      if 'bn_conv1' in l.name:
+      if 'bn5c_branch2a' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
         tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
-      if 'conv1' in l.name:
-        tf.identity(l.trainable_weights[0], 'conv1_training_weights')
+      if 'res5c_branch2c' in l.name:
+        tf.identity(l.trainable_weights, 'conv1_training_weights')
 
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
