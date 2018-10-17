@@ -275,7 +275,7 @@ def resnet_model_fn(features, labels, mode, model_class,
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
         tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
       if 'res5c_branch2c' in l.name:
-        tf.identity(l.trainable_weights, 'conv1_training_weights')
+        tf.identity(tf.shape(l.get_weights()), 'conv1_training_weights')
 
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
