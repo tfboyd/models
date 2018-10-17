@@ -274,11 +274,11 @@ def resnet_model_fn(features, labels, mode, model_class,
       for l in model.layers:
         if 'bn5c_branch2a' in l.name:
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
-          print("\n\n bn5c_branch2a weights ", l.get_weights())
+          # print("\n\n bn5c_branch2a weights ", l.get_weights())
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance')
         if 'res5c_branch2c' in l.name:
-          print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
-          # tf.identity(tf.shape(l.get_weights()), 'conv1_training_weights')
+          # print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
+          tf.identity(l.trainable_variables[0], 'conv1_training_weights')
     if mode != tf.estimator.ModeKeys.TRAIN:
       for l in model.layers:
         if 'bn5c_branch2a' in l.name:
