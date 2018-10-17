@@ -32,7 +32,9 @@ from official.utils.logs import metric_hook
 
 _TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
                                         'cross_entropy',
-                                        'train_accuracy'])
+                                        'train_accuracy',
+                                        'bn_conv1_moving_mean',
+                                        'bn_conv1_moving_variance'])
 
 
 def get_train_hooks(name_list, use_tpu=False, **kwargs):

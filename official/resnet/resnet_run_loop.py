@@ -274,7 +274,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       if 'bn5c_branch2a' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
         print("\n\n bn5c_branch2a weights ", l.get_weights())
-        # tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
+        tf.identity(l.moving_variance, 'bn_conv1_moving_variance')
       if 'res5c_branch2c' in l.name:
         print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
         # tf.identity(tf.shape(l.get_weights()), 'conv1_training_weights')
@@ -566,7 +566,8 @@ def resnet_main(
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=flags_obj.max_train_steps)
+                                       steps=flags_obj.max_train_steps,
+                                       hooks=eval_hooks)
 
     benchmark_logger.log_evaluation_result(eval_results)
 
