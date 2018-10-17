@@ -266,8 +266,9 @@ def resnet_model_fn(features, labels, mode, model_class,
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
+      
 
-
+  logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
   if use_keras_model:
     for l in model.layers:
       if 'bn_conv1' in l.name:
@@ -275,9 +276,7 @@ def resnet_model_fn(features, labels, mode, model_class,
         tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
       # if 'conv1' in l.name:
         # tf.identity(l.trainable_weights[0], 'conv1_training_weights')
-        
 
-  logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
   # not a SparseTensor). If dtype is is low precision, logits must be cast to
