@@ -273,8 +273,8 @@ def resnet_model_fn(features, labels, mode, model_class,
       if 'bn_conv1' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
         tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
-      if 'conv1' in l.name:
-        tf.identity(l.trainable_weights, 'conv1_training_weights')
+      # if 'conv1' in l.name:
+        # tf.identity(l.trainable_weights[0], 'conv1_training_weights')
         
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
