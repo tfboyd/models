@@ -263,10 +263,10 @@ def resnet_model_fn(features, labels, mode, model_class,
     print("Using Keras ResNet50 1.5 model.")
     model = keras_resnet_model.ResNet50(classes=num_classes, weights=None,
                                         training=(mode == tf.estimator.ModeKeys.TRAIN))
+    print("\n\n model summary ", model.summary())
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
-      
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
   if use_keras_model:
@@ -274,8 +274,8 @@ def resnet_model_fn(features, labels, mode, model_class,
       if 'bn_conv1' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
         tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
-      # if 'conv1' in l.name:
-        # tf.identity(l.trainable_weights[0], 'conv1_training_weights')
+      if 'conv1' in l.name:
+        tf.identity(l.trainable_weights[0], 'conv1_training_weights')
 
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
