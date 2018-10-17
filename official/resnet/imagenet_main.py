@@ -187,7 +187,8 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None,
 
   if is_training:
     # Shuffle the input files
-    dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
+    # TODO(anjalisridhar): removing shuffle
+    # dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
 
   # Convert to individual records.
   # cycle_length = 10 means 10 files will be read and deserialized in parallel.
@@ -359,6 +360,7 @@ def run_imagenet(flags_obj):
 
 
 def main(_):
+  tf.set_random_seed(15)
   with logger.benchmark_context(flags.FLAGS):
     run_imagenet(flags.FLAGS)
 

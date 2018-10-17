@@ -80,7 +80,8 @@ def process_record_dataset(dataset, is_training, batch_size, shuffle_buffer,
   if is_training:
     # Shuffle the records. Note that we shuffle before repeating to ensure
     # that the shuffling respects epoch boundaries.
-    dataset = dataset.shuffle(buffer_size=shuffle_buffer)
+    # TODO(anjalisridhar): Removing shuffle here as well
+    # dataset = dataset.shuffle(buffer_size=shuffle_buffer)
 
   # If we are training over multiple epochs before evaluating, repeat the
   # dataset for the appropriate number of epochs.
@@ -266,8 +267,15 @@ def resnet_model_fn(features, labels, mode, model_class,
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
 
-  if mode != tf.estimator.ModeKeys.TRAIN:
-    print("Model weights for evaluation ", model.get_weights()[0])
+
+  if use_keras_model:
+    for l in model.layers:
+      if 'bn_conv1' in l.name:
+        tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
+        tf.identity(l.moving_mean, 'bn_conv1_moving_variance')
+      if 'conv1' in l.name:
+        tf.identity(l.trainable_weights, 'conv1_training_weights')
+        
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
@@ -552,7 +560,8 @@ def resnet_main(
     # global_step count.
     # TODO(anjalisridhar): Not evaluating
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=flags_obj.max_train_steps)
+                                       steps=flags_obj.max_train_steps,
+                                       hooks=train_hooks)
 
     benchmark_logger.log_evaluation_result(eval_results)
 
