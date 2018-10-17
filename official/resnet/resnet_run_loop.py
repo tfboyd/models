@@ -269,7 +269,7 @@ def resnet_model_fn(features, labels, mode, model_class,
                         dtype=dtype)
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
-  if use_keras_model and mode != tf.estimator.ModeKeys.TRAIN:
+  if use_keras_model:
     for l in model.layers:
       if 'bn5c_branch2a' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
