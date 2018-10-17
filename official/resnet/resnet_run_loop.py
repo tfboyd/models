@@ -546,6 +546,10 @@ def resnet_main(
   for cycle_index, num_train_epochs in enumerate(schedule):
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
 
+    tensors_to_log = dict((x, x) for x in [
+                                        'bn_conv1_moving_mean',
+                                        'bn_conv1_moving_variance'])
+    eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     if num_train_epochs:
       classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
                        hooks=train_hooks, max_steps=flags_obj.max_train_steps)
