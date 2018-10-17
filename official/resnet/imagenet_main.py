@@ -185,7 +185,7 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1, num_gpus=None,
   filenames = get_filenames(is_training, data_dir)
   dataset = tf.data.Dataset.from_tensor_slices(filenames)
 
-  if is_training:
+  # if is_training:
     # Shuffle the input files
     # TODO(anjalisridhar): removing shuffle
     # dataset = dataset.shuffle(buffer_size=_NUM_TRAIN_FILES)
