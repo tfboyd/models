@@ -572,7 +572,7 @@ def resnet_main(
     tensors_to_log = dict((x, x) for x in [
                                         'bn_conv1_moving_mean_eval',
                                         'bn_conv1_moving_variance_eval',
-                                        'conv1_training_weights_evals'])
+                                        'conv1_training_weights_eval'])
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
