@@ -269,7 +269,7 @@ def resnet_model_fn(features, labels, mode, model_class,
                         dtype=dtype)
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
-  if use_keras_model:
+  if use_keras_model and mode != tf.estimator.ModeKeys.TRAIN:
     for l in model.layers:
       if 'bn5c_branch2a' in l.name:
         tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
@@ -566,8 +566,7 @@ def resnet_main(
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=flags_obj.max_train_steps,
-                                       hooks=eval_hooks)
+                                       steps=flags_obj.max_train_steps)
 
     benchmark_logger.log_evaluation_result(eval_results)
 
