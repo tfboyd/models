@@ -61,11 +61,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, training=Tr
   bn_name_base = 'bn' + str(stage) + block + '_branch'
 
   x = tf.keras.layers.Conv2D(filters1, (1, 1),
-                             name=conv_name_base + '2a',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(input_tensor)
+                             name=conv_name_base + '2a')(input_tensor)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -74,11 +70,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, training=Tr
 
   x = tf.keras.layers.Conv2D(filters2, kernel_size,
                              padding='same',
-                             name=conv_name_base + '2b',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+                             name=conv_name_base + '2b')(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -86,11 +78,7 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, training=Tr
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters3, (1, 1), 
-                             name=conv_name_base + '2c',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+                             name=conv_name_base + '2c')(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -132,11 +120,7 @@ def conv_block(input_tensor,
   bn_name_base = 'bn' + str(stage) + block + '_branch'
 
   x = tf.keras.layers.Conv2D(filters1, (1, 1),
-                             name=conv_name_base + '2a',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(input_tensor)
+                             name=conv_name_base + '2a')(input_tensor)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -144,11 +128,7 @@ def conv_block(input_tensor,
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters2, kernel_size, padding='same',
-                             name=conv_name_base + '2b', strides=strides,
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+                             name=conv_name_base + '2b', strides=strides)(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
@@ -156,22 +136,14 @@ def conv_block(input_tensor,
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters3, (1, 1),
-                             name=conv_name_base + '2c',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+                             name=conv_name_base + '2c')(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis,
                                          momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
                                          name=bn_name_base + '2c')(x, training=training)
 
   shortcut = tf.keras.layers.Conv2D(filters3, (1, 1), strides=strides,
-                                    name=conv_name_base + '1',
-                                    kernel_regularizer=
-                                    tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                                    bias_regularizer=
-                                    tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(input_tensor)
+                                    name=conv_name_base + '1')(input_tensor)
   shortcut = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
                                                 epsilon=BATCH_NORM_EPSILON,
                                                 name=bn_name_base + '1')(shortcut, training=training)
@@ -187,7 +159,7 @@ def ResNet50(include_top=True,
     input_shape=None,
     pooling=None,
     classes=1000,
-    training=True):
+    training=False):
   """Instantiates the ResNet50 architecture.
   Optionally loads weights pre-trained on ImageNet.
   Note that the data format convention used by the model is
@@ -227,6 +199,7 @@ def ResNet50(include_top=True,
       ValueError: in case of invalid argument for `weights`,
           or invalid input shape.
   """
+  print("\n\n TRAINING ", training)
   if not (weights in {'imagenet', None} or os.path.exists(weights)):
     raise ValueError('The `weights` argument should be either '
                      '`None` (random initialization), `imagenet` '
@@ -262,11 +235,7 @@ def ResNet50(include_top=True,
   x = tf.keras.layers.Conv2D(64, (7, 7),
                              strides=(2, 2),
                              padding='valid',
-                             name='conv1',
-                             kernel_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY),
-                             bias_regularizer=
-                             tf.keras.regularizers.l2(L2_WEIGHT_DECAY))(x)
+                             name='conv1')(x)
   x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
                                          epsilon=BATCH_NORM_EPSILON,
                                          name='bn_conv1')(x, training=training)
