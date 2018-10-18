@@ -159,7 +159,7 @@ def ResNet50(include_top=True,
     input_shape=None,
     pooling=None,
     classes=1000,
-    training=False):
+    training=True):
   """Instantiates the ResNet50 architecture.
   Optionally loads weights pre-trained on ImageNet.
   Note that the data format convention used by the model is
