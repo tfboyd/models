@@ -579,7 +579,6 @@ def resnet_main(
     # global_step count.
     # TODO(anjalisridhar): Not evaluating
     tensors_to_log = dict((x, x) for x in [
-                                        'conv1_training_weights_eval',
                                         'logits',
                                         'labels',
                                         'squeezed_logits'])

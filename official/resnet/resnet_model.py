@@ -392,6 +392,8 @@ class Model(object):
       data_format = (
           'channels_first' if tf.test.is_built_with_cuda() else 'channels_last')
 
+    print("\n\n data_format ", data_format)
+
     self.resnet_version = resnet_version
     if resnet_version not in (1, 2):
       raise ValueError(

@@ -33,7 +33,6 @@ from official.utils.logs import metric_hook
 _TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
                                         'cross_entropy',
                                         'train_accuracy',
-                                        'conv1_training_weights',
                                         'logits',
                                         'labels'])
 
