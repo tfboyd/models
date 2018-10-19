@@ -36,8 +36,8 @@ WEIGHTS_PATH_NO_TOP = ('https://github.com/fchollet/deep-learning-models/'
                        'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
 L2_WEIGHT_DECAY = 1e-4
-BATCH_NORM_DECAY = 0.9
-BATCH_NORM_EPSILON = 1e-5
+_BATCH_NORM_DECAY = 0.9
+_BATCH_NORM_EPSILON = 1e-5
 
 
 def batch_norm(inputs, training, data_format=tf.keras.backend.image_data_format()):
