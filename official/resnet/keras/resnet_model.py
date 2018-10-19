@@ -36,8 +36,8 @@ WEIGHTS_PATH_NO_TOP = ('https://github.com/fchollet/deep-learning-models/'
                        'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5')
 
 L2_WEIGHT_DECAY = 1e-4
-_BATCH_NORM_DECAY = 0.9
-_BATCH_NORM_EPSILON = 1e-5
+BATCH_NORM_DECAY = 0.9
+BATCH_NORM_EPSILON = 1e-5
 
 
 def batch_norm(inputs, training, data_format=tf.keras.backend.image_data_format()):
@@ -46,7 +46,7 @@ def batch_norm(inputs, training, data_format=tf.keras.backend.image_data_format(
   # https://www.tensorflow.org/performance/performance_guide#common_fused_ops
   return tf.layers.batch_normalization(
       inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
-      momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True,
+      momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, center=True,
       scale=True, training=training, fused=True)
 
 def identity_block(input_tensor, kernel_size, filters, stage, block, training=True):
