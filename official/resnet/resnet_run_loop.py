@@ -490,8 +490,6 @@ def resnet_main(
   else:
     warm_start_settings = None
   
-  print("\n\n data format orginally ", flags_obj.data_format)
-  print("\n\n data format in Keras ", tf.keras.backend.image_data_format())
   classifier = tf.estimator.Estimator(
       model_fn=model_function, model_dir=flags_obj.model_dir,
       config=run_config, warm_start_from=warm_start_settings,
