@@ -147,7 +147,7 @@ def conv_block(input_tensor,
   shortcut = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
                                                 epsilon=BATCH_NORM_EPSILON,
                                                 name=bn_name_base + '1')(shortcut, training=training)
-
+  tf.identity(x, 'model_output_' + conv_name_base + '2c')
   x = tf.keras.layers.add([x, shortcut])
   x = tf.keras.layers.Activation('relu')(x)
   return x
