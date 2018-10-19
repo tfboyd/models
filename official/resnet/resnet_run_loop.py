@@ -576,7 +576,8 @@ def resnet_main(
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
-                                       steps=flags_obj.max_train_steps)
+                                       steps=flags_obj.max_train_steps,
+                                       hooks=eval_hooks)
 
     benchmark_logger.log_evaluation_result(eval_results)
 
