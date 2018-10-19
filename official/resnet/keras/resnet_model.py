@@ -241,7 +241,7 @@ def ResNet50(include_top=True,
                                          name='bn_conv1')(x, training=training)
   x = tf.keras.layers.Activation('relu')(x)
   x = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
-  layer_chk = tf.identity(tf.reduce_max(x, name='layer_chk'), 'layer_chk')
+  # layer_chk = tf.identity(tf.reduce_max(x, name='layer_chk'), 'layer_chk')
   x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1), training=training)
   x = identity_block(x, 3, [64, 64, 256], stage=2, block='b', training=training)
   x = identity_block(x, 3, [64, 64, 256], stage=2, block='c', training=training)

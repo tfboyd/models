@@ -278,7 +278,7 @@ def resnet_model_fn(features, labels, mode, model_class,
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance')
         if 'res5c_branch2c' in l.name:
           # print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
-          tf.identity(l.trainable_variables[0][:1], 'conv1_training_weights')
+          tf.identity(l.trainable_variables[0][:1][:1][:5], 'conv1_training_weights')
     if mode != tf.estimator.ModeKeys.TRAIN:
       for l in model.layers:
         if 'bn5c_branch2a' in l.name:
@@ -287,7 +287,7 @@ def resnet_model_fn(features, labels, mode, model_class,
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance_eval')
         if 'res5c_branch2c' in l.name:
           # print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
-          tf.identity(l.trainable_variables[0][:1], 'conv1_training_weights_eval')
+          tf.identity(l.trainable_variables[0][:1][:1][:5], 'conv1_training_weights_eval')
 
   # This acts as a no-op if the logits are already in fp32 (provided logits are
   # not a SparseTensor). If dtype is is low precision, logits must be cast to
@@ -570,8 +570,6 @@ def resnet_main(
     # global_step count.
     # TODO(anjalisridhar): Not evaluating
     tensors_to_log = dict((x, x) for x in [
-                                        'bn_conv1_moving_mean_eval',
-                                        'bn_conv1_moving_variance_eval',
                                         'conv1_training_weights_eval'])
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
