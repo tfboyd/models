@@ -40,7 +40,7 @@ BATCH_NORM_DECAY = 0.9
 BATCH_NORM_EPSILON = 1e-5
 
 
-def batch_norm(inputs, training, data_format=tf.keras.backend.image_data_format()):
+def batch_norm(inputs, training, data_format=None):
   """Performs a batch normalization using a standard set of parameters."""
   # We set fused=True for a significant performance boost. See
   # https://www.tensorflow.org/performance/performance_guide#common_fused_ops
@@ -252,10 +252,10 @@ def ResNet50(include_top=True,
                              strides=(2, 2),
                              padding='valid',
                              name='conv1')(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name='bn_conv1')(x, training=training)
-  # x = batch_norm(x, training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name='bn_conv1')(x, training=training)
+  x = batch_norm(x, training, tf.keras.backend.data_format())
   x = tf.keras.layers.Activation('relu')(x)
   x = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
   # layer_chk = tf.identity(tf.reduce_max(x, name='layer_chk'), 'layer_chk')
