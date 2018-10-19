@@ -255,7 +255,7 @@ def ResNet50(include_top=True,
   # x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
   #                                        epsilon=BATCH_NORM_EPSILON,
   #                                        name='bn_conv1')(x, training=training)
-  x = batch_norm(x, training, tf.keras.backend.data_format())
+  x = batch_norm(x, training, tf.keras.backend.image_data_format())
   x = tf.keras.layers.Activation('relu')(x)
   x = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
   # layer_chk = tf.identity(tf.reduce_max(x, name='layer_chk'), 'layer_chk')
