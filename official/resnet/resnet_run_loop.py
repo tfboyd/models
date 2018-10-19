@@ -312,6 +312,9 @@ def resnet_model_fn(features, labels, mode, model_class,
         })
 
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
+  tf.identity(logits, name='logits')
+  tf.identity(labels, name='labels')
+  
   cross_entropy = tf.losses.sparse_softmax_cross_entropy(
       logits=logits, labels=labels)
 
