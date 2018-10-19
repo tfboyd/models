@@ -314,7 +314,8 @@ def resnet_model_fn(features, labels, mode, model_class,
   # Calculate loss, which includes softmax cross entropy and L2 regularization.
   tf.identity(logits, name='logits')
   tf.identity(labels, name='labels')
-  
+  tf.identity(tf.squeeze(logits), 'squeezed_logits')
+
   cross_entropy = tf.losses.sparse_softmax_cross_entropy(
       logits=logits, labels=labels)
 
@@ -577,7 +578,9 @@ def resnet_main(
     # TODO(anjalisridhar): Not evaluating
     tensors_to_log = dict((x, x) for x in [
                                         'conv1_training_weights_eval',
-                                        'reduced_conv1_training_weights_eval'])
+                                        'logits',
+                                        'labels',
+                                        'squeezed_logits'])
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
