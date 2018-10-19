@@ -263,7 +263,7 @@ def resnet_model_fn(features, labels, mode, model_class,
     print("Using Keras ResNet50 1.5 model.")
     model = keras_resnet_model.ResNet50(classes=num_classes, weights=None,
                                         training=(mode == tf.estimator.ModeKeys.TRAIN))
-    # print("\n\n model summary ", model.summary())
+    print("\n\n model summary ", model.summary())
   else:
     model = model_class(resnet_size, data_format, resnet_version=resnet_version,
                         dtype=dtype)
