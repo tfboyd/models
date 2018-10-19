@@ -40,6 +40,15 @@ BATCH_NORM_DECAY = 0.9
 BATCH_NORM_EPSILON = 1e-5
 
 
+def batch_norm(inputs, training, data_format=tf.keras.backend.image_data_format()):
+  """Performs a batch normalization using a standard set of parameters."""
+  # We set fused=True for a significant performance boost. See
+  # https://www.tensorflow.org/performance/performance_guide#common_fused_ops
+  return tf.layers.batch_normalization(
+      inputs=inputs, axis=1 if data_format == 'channels_first' else 3,
+      momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True,
+      scale=True, training=training, fused=True)
+
 def identity_block(input_tensor, kernel_size, filters, stage, block, training=True):
   """The identity block is the block that has no conv layer at shortcut.
   # Arguments
@@ -62,27 +71,30 @@ def identity_block(input_tensor, kernel_size, filters, stage, block, training=Tr
 
   x = tf.keras.layers.Conv2D(filters1, (1, 1),
                              name=conv_name_base + '2a')(input_tensor)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2a')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2a')(x, training=training)
+  x = batch_norm(x, training)
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters2, kernel_size,
                              padding='same',
                              name=conv_name_base + '2b')(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2b')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2b')(x, training=training)
+  x = batch_norm(x, training)
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters3, (1, 1), 
                              name=conv_name_base + '2c')(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2c')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2c')(x, training=training)
+  x = batch_norm(x, training)
 
   x = tf.keras.layers.add([x, input_tensor])
   x = tf.keras.layers.Activation('relu')(x)
@@ -121,32 +133,36 @@ def conv_block(input_tensor,
 
   x = tf.keras.layers.Conv2D(filters1, (1, 1),
                              name=conv_name_base + '2a')(input_tensor)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2a')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2a')(x, training=training)
+  x = batch_norm(x, training)
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters2, kernel_size, padding='same',
                              name=conv_name_base + '2b', strides=strides)(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2b')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2b')(x, training=training)
+  x = batch_norm(x, training)
   x = tf.keras.layers.Activation('relu')(x)
 
   x = tf.keras.layers.Conv2D(filters3, (1, 1),
                              name=conv_name_base + '2c')(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis,
-                                         momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name=bn_name_base + '2c')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis,
+  #                                        momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name=bn_name_base + '2c')(x, training=training)
+  x = batch_norm(x, training)
 
   shortcut = tf.keras.layers.Conv2D(filters3, (1, 1), strides=strides,
                                     name=conv_name_base + '1')(input_tensor)
-  shortcut = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
-                                                epsilon=BATCH_NORM_EPSILON,
-                                                name=bn_name_base + '1')(shortcut, training=training)
+  # shortcut = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
+  #                                               epsilon=BATCH_NORM_EPSILON,
+  #                                               name=bn_name_base + '1')(shortcut, training=training)
+  x = batch_norm(shortcut, training)
   x = tf.keras.layers.add([x, shortcut])
   x = tf.keras.layers.Activation('relu')(x)
   return x
@@ -235,9 +251,10 @@ def ResNet50(include_top=True,
                              strides=(2, 2),
                              padding='valid',
                              name='conv1')(x)
-  x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
-                                         epsilon=BATCH_NORM_EPSILON,
-                                         name='bn_conv1')(x, training=training)
+  # x = tf.keras.layers.BatchNormalization(axis=bn_axis, momentum=BATCH_NORM_DECAY,
+  #                                        epsilon=BATCH_NORM_EPSILON,
+  #                                        name='bn_conv1')(x, training=training)
+  x = batch_norm(shortcut, training)
   x = tf.keras.layers.Activation('relu')(x)
   x = tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
   # layer_chk = tf.identity(tf.reduce_max(x, name='layer_chk'), 'layer_chk')
