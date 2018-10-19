@@ -225,6 +225,11 @@ def ResNet50(include_top=True,
     raise ValueError('If using `weights` as `"imagenet"` with `include_top`'
                      ' as true, `classes` should be 1000')
 
+  if not data_format:
+      data_format = (
+          tf.keras.backend.set_image_data_format('channels_first') if tf.test.is_built_with_cuda() 
+          else tf.keras.backend.set_image_data_format('channels_last'))
+
   # Determine proper input shape
   input_shape = imagenet_utils._obtain_input_shape(
       input_shape,
