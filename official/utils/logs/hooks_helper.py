@@ -34,7 +34,8 @@ _TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate',
                                         'cross_entropy',
                                         'train_accuracy',
                                         'logits',
-                                        'labels'])
+                                        'labels',
+                                        'bn_updates'])
 
 
 def get_train_hooks(name_list, use_tpu=False, **kwargs):
