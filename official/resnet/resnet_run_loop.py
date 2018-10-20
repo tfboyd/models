@@ -274,7 +274,8 @@ def resnet_model_fn(features, labels, mode, model_class,
       for l in model.layers:
         if 'bn5c_branch2a' in l.name:
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
-          tf.identity(l.updates, 'bn_updates')
+          # tf.identity(l.updates, 'bn_updates')
+          tf.print(l.updates[0])
           # print("\n\n bn5c_branch2a weights ", l.get_weights())
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance')
         if 'res5c_branch2c' in l.name:
