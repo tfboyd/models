@@ -389,8 +389,11 @@ def resnet_model_fn(features, labels, mode, model_class,
       if fine_tune:
         grad_vars = _dense_grad_filter(grad_vars)
       minimize_op = optimizer.apply_gradients(grad_vars, global_step)
-
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    
+    if use_keras_model:
+      update_ops = model.get_updates_for(features)
+    else:
+      update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     print("\n\n UPDATE_OPS ", update_ops)
     train_op = tf.group(minimize_op, update_ops)
   else:
