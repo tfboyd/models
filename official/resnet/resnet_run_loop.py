@@ -270,13 +270,14 @@ def resnet_model_fn(features, labels, mode, model_class,
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
   if use_keras_model:
+    bn_updates = []
     if mode == tf.estimator.ModeKeys.TRAIN:
       for l in model.layers:
         #bn5c_branch2a
         if 'bn' in l.name:
-          print("\n\n BN layer ")
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
           # tf.identity(l.updates, 'bn_updates')
+          bn_updates.append(l.get_updates_for(features))
           #for u in l.updates:
           #  tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, u)
             # tf.Print(u, [u], message='bn updates')
@@ -390,8 +391,11 @@ def resnet_model_fn(features, labels, mode, model_class,
       if fine_tune:
         grad_vars = _dense_grad_filter(grad_vars)
       minimize_op = optimizer.apply_gradients(grad_vars, global_step)
-
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    
+    if use_keras_model:
+      update_ops = bn_updates
+    else:
+      update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     # print("\n\n UPDATE_OPS ", update_ops)
     train_op = tf.group(minimize_op, update_ops)
   else:
