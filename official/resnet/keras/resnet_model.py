@@ -214,7 +214,6 @@ def ResNet50(include_top=True,
       ValueError: in case of invalid argument for `weights`,
           or invalid input shape.
   """
-  print("\n\n TRAINING ", training)
   if not (weights in {'imagenet', None} or os.path.exists(weights)):
     raise ValueError('The `weights` argument should be either '
                      '`None` (random initialization), `imagenet` '
@@ -283,7 +282,7 @@ def ResNet50(include_top=True,
   if include_top:
     x = tf.keras.layers.AveragePooling2D((7, 7), name='avg_pool')(x)
     x = tf.keras.layers.Flatten()(x)
-    # x = tf.keras.layers.Dense(classes, activation='linear', name='fc1000')(x)
+    x = tf.keras.layers.Dense(classes, activation='linear', name='fc1000')(x)
   else:
     if pooling == 'avg':
       x = tf.keras.layers.GlobalAveragePooling2D()(x)
