@@ -276,7 +276,6 @@ def resnet_model_fn(features, labels, mode, model_class,
       for l in model.layers:
         #bn5c_branch2a
         if 'bn' in l.name:
-          print("\n\n BN layer ")
           bn_updates.append(l.get_updates_for(features))
         if 'bn5c_branch2a' in l.name:
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
