@@ -277,8 +277,8 @@ def resnet_model_fn(features, labels, mode, model_class,
           print("\n\n BN layer ")
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean')
           # tf.identity(l.updates, 'bn_updates')
-          for u in l.updates:
-            tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, u)
+          #for u in l.updates:
+          #  tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, u)
             # tf.Print(u, [u], message='bn updates')
           # print("\n\n bn5c_branch2a weights ", l.get_weights())
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance')
@@ -392,7 +392,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       minimize_op = optimizer.apply_gradients(grad_vars, global_step)
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    print("\n\n UPDATE_OPS ", update_ops)
+    # print("\n\n UPDATE_OPS ", update_ops)
     train_op = tf.group(minimize_op, update_ops)
   else:
     train_op = None
@@ -585,8 +585,7 @@ def resnet_main(
     # TODO(anjalisridhar): Not evaluating
     tensors_to_log = dict((x, x) for x in [
                                         'logits',
-                                        'labels',
-                                        'squeezed_logits'])
+                                        'labels'])
     eval_hooks = [tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=1)]
     
     eval_results = classifier.evaluate(input_fn=input_fn_eval,
