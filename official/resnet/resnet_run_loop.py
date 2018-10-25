@@ -289,13 +289,10 @@ def resnet_model_fn(features, labels, mode, model_class,
       for l in model.layers:
         if 'bn5c_branch2a' in l.name:
           tf.identity(l.moving_mean, 'bn_conv1_moving_mean_eval')
-          # print("\n\n bn5c_branch2a weights ", l.get_weights())
           tf.identity(l.moving_variance, 'bn_conv1_moving_variance_eval')
         if 'res5c_branch2c' in l.name:
-          # print("\n\n res5c_branch2c weights ", l.get_weights()[0][:5])
           tf.identity(l.trainable_variables[0][:1][:1][:5], 'conv1_training_weights_eval')
-          # tf.identity(tf.reduce_max(l.trainable_variables), 'reduced_conv1_training_weights_eval')
-
+          
   # This acts as a no-op if the logits are already in fp32 (provided logits are
   # not a SparseTensor). If dtype is is low precision, logits must be cast to
   # fp32 for numerical stability.
@@ -393,7 +390,6 @@ def resnet_model_fn(features, labels, mode, model_class,
       update_ops = bn_updates      
     else:
       update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    print("\n\n UPDATE_OPS ", update_ops)
     train_op = tf.group(minimize_op, update_ops)
   else:
     train_op = None
