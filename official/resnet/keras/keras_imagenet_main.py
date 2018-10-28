@@ -31,6 +31,7 @@ from official.resnet.keras import resnet_model
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import distribution_utils
+from tensorflow.python.client import timeline
 
 
 class TimeHistory(tf.keras.callbacks.Callback):
@@ -188,31 +189,42 @@ def run_imagenet_with_keras(flags_obj):
   strategy = distribution_utils.get_distribution_strategy(
       num_gpus=flags_obj.num_gpus)
 
-  model = resnet_model.ResNet50(classes=imagenet_main._NUM_CLASSES,
-                                weights=None)
-
   # Hardcode learning phase to improve perf by getting rid of a few conds
   # in the graph.
-  #tf.keras.backend.set_learning_phase(True)
+  # TODO(anjalisridhar): 
+  tf.keras.backend.set_learning_phase(True)
+  # set timeline options
+  run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+  run_metadata = tf.RunMetadata()
+
+  model = resnet_model.ResNet50(classes=imagenet_main._NUM_CLASSES,
+                                weights=None)
 
   model.compile(loss=softmax_crossentropy_with_logits,
                 optimizer=opt,
                 metrics=['accuracy'],
-                distribute=strategy)
+                distribute=strategy,
+                options=run_options,
+                run_metadata=run_metadata)
   time_callback = TimeHistory(flags_obj.batch_size)
 
-  steps_per_epoch = imagenet_main._NUM_IMAGES['train'] // flags_obj.batch_size
+  steps_per_epoch = imagenet_main._NUM_IMAGES['train'] //
+      flags_obj.batch_size
   model.fit(train_input_dataset,
             epochs=flags_obj.train_epochs,
             steps_per_epoch=steps_per_epoch,
             callbacks=[time_callback],
             verbose=0)
-
-  num_eval_steps = imagenet_main._NUM_IMAGES['validation'] // flags_obj.batch_size
-  eval_output = model.evaluate(eval_input_dataset,
-                               steps=num_eval_steps,
-                               verbose=0)
-  print('Test loss:', eval_output[0])
+  # Write the timeline
+  trace = timeline.Timeline(step_stats=run_metadata.step_stats)
+  with open('/tmp/keras/timeline.ctf.json', 'w') as f:
+    f.write(trace.generate_chrome_trace_format())
+  # num_eval_steps = imagenet_main._NUM_IMAGES['validation'] //
+  # flags_obj.batch_size
+  # eval_output = model.evaluate(eval_input_dataset,
+  #                              steps=num_eval_steps,
+  #                              verbose=0)
+  # print('Test loss:', eval_output[0])
 
   # If you have set FLAGS.train_epochs to be 1 then we cannot calculate
   # samples/s in a meaningful way since the first epoch takes the longest.
