@@ -208,8 +208,7 @@ def run_imagenet_with_keras(flags_obj):
                 run_metadata=run_metadata)
   time_callback = TimeHistory(flags_obj.batch_size)
 
-  steps_per_epoch = imagenet_main._NUM_IMAGES['train'] //
-      flags_obj.batch_size
+  steps_per_epoch = imagenet_main._NUM_IMAGES['train'] // flags_obj.batch_size
   model.fit(train_input_dataset,
             epochs=flags_obj.train_epochs,
             steps_per_epoch=steps_per_epoch,
@@ -219,8 +218,7 @@ def run_imagenet_with_keras(flags_obj):
   trace = timeline.Timeline(step_stats=run_metadata.step_stats)
   with open('/tmp/keras/timeline.ctf.json', 'w') as f:
     f.write(trace.generate_chrome_trace_format())
-  # num_eval_steps = imagenet_main._NUM_IMAGES['validation'] //
-  # flags_obj.batch_size
+  # num_eval_steps = imagenet_main._NUM_IMAGES['validation'] // flags_obj.batch_size
   # eval_output = model.evaluate(eval_input_dataset,
   #                              steps=num_eval_steps,
   #                              verbose=0)
