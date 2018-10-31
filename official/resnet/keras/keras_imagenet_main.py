@@ -179,6 +179,10 @@ def run_imagenet_with_keras(flags_obj):
   # Set environment vars and session config
   session_config = resnet_run_loop.set_environment_vars(flags_obj)
   session = tf.Session(config=session_config)
+
+  run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+  run_metadata = tf.RunMetadata()
+
   tf.keras.backend.set_session(session)
 
   # Use Keras ResNet50 applications model and native keras APIs
@@ -194,9 +198,7 @@ def run_imagenet_with_keras(flags_obj):
   # TODO(anjalisridhar): 
   tf.keras.backend.set_learning_phase(True)
   # set timeline options
-  run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-  run_metadata = tf.RunMetadata()
-
+  
   model = resnet_model.ResNet50(classes=imagenet_main._NUM_CLASSES,
                                 weights=None)
 
@@ -211,13 +213,16 @@ def run_imagenet_with_keras(flags_obj):
   steps_per_epoch = imagenet_main._NUM_IMAGES['train'] // flags_obj.batch_size
   model.fit(train_input_dataset,
             epochs=flags_obj.train_epochs,
-            steps_per_epoch=steps_per_epoch,
+            steps_per_epoch=5,
             callbacks=[time_callback],
             verbose=0)
+
   # Write the timeline
-  trace = timeline.Timeline(step_stats=run_metadata.step_stats)
-  with open('/tmp/keras/timeline.ctf.json', 'w') as f:
-    f.write(trace.generate_chrome_trace_format())
+  tl = timeline.Timeline(run_metadata.step_stats)
+  ctf = tl.generate_chrome_trace_format()
+  with open('/tmp/keras/timeline.json', 'w') as f:
+        f.write(ctf)
+  f.close()
   # num_eval_steps = imagenet_main._NUM_IMAGES['validation'] // flags_obj.batch_size
   # eval_output = model.evaluate(eval_input_dataset,
   #                              steps=num_eval_steps,
