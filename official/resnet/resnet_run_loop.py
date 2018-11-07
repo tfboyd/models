@@ -546,7 +546,7 @@ def resnet_main(
       classifier.train(input_fn=lambda: input_fn_train(num_train_epochs),
                        hooks=train_hooks, max_steps=flags_obj.max_train_steps)
 
-    if flags_obj.do_eval:
+    if not flags_obj.skip_eval:
       tf.logging.info('Starting to evaluate.')
 
       # flags_obj.max_train_steps is generally associated with testing and
@@ -595,9 +595,8 @@ def define_resnet_flags(resnet_size_choices=None):
           'If not None initialize all the network except the final layer with '
           'these values'))
   flags.DEFINE_boolean(
-      name='do_eval', default=False,
-      help=flags_core.help_wrap('Do evalueation step only when this flag is '
-                                'set to true. Otherwise, skip evaluation.'))
+      name='skip_eval', default=False,
+      help=flags_core.help_wrap('Skip evaluation when this flag is true'))
 
   choice_kwargs = dict(
       name='resnet_size', short_name='rs', default='50',
