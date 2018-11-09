@@ -195,7 +195,7 @@ def run_imagenet_with_keras(flags_obj):
   # in the graph.
   #tf.keras.backend.set_learning_phase(True)
 
-  model.compile(loss=softmax_crossentropy_with_logits,
+  model.compile(loss=cross_entropy_plus_l2_loss,
                 optimizer=opt,
                 metrics=['accuracy'],
                 distribute=strategy)
