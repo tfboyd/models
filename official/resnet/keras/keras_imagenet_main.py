@@ -256,7 +256,7 @@ def cross_entropy_plus_l2_loss(y_true, y_pred):
   l2_loss = weight_decay * tf.add_n(
       # loss is computed using fp32 for numerical stability.
       [tf.nn.l2_loss(tf.cast(v, tf.float32)) for v in tf.trainable_variables()
-       if v.name.startswith('bn')])
+       if not v.name.startswith('bn')])
 
   return entropy_loss + l2_loss
 
