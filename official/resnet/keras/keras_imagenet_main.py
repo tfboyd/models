@@ -251,6 +251,7 @@ def _softmax_crossentropy_with_logits(y_true, y_pred):
       labels=tf.reshape(tf.cast(y_true, tf.int64), [-1,]))
 
 def cross_entropy_plus_l2_loss(y_true, y_pred):
+  weight_decay = 1e-4
   entropy_loss = _softmax_crossentropy_with_logits(y_true, y_pred)
   l2_loss = weight_decay * tf.add_n(
       # loss is computed using fp32 for numerical stability.
