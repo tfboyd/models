@@ -239,7 +239,7 @@ def run_imagenet_with_keras(flags_obj):
            steps_per_epoch, samples_per_second))
 
 
-def softmax_crossentropy_with_logits(y_true, y_pred):
+def _softmax_crossentropy_with_logits(y_true, y_pred):
   """A loss function replicating tf's sparse_softmax_cross_entropy
 
   Args:
@@ -249,6 +249,17 @@ def softmax_crossentropy_with_logits(y_true, y_pred):
   return tf.losses.sparse_softmax_cross_entropy(
       logits=y_pred,
       labels=tf.reshape(tf.cast(y_true, tf.int64), [-1,]))
+
+def cross_entropy_plus_l2_loss(y_true, y_pred):
+  entropy_loss = _softmax_crossentropy_with_logits(y_true, y_pred)
+  l2_loss = weight_decay * tf.add_n(
+      # loss is computed using fp32 for numerical stability.
+      [tf.nn.l2_loss(tf.cast(v, tf.float32)) for v in tf.trainable_variables()
+       if loss_filter_fn(v.name)])
+
+  return entropy_loss + l2_loss
+
+
 
 def main(_):
   with logger.benchmark_context(flags.FLAGS):
