@@ -74,6 +74,50 @@ class TimeHistory(tf.keras.callbacks.Callback):
                         "'images_per_second': %f}" %
                         (batch, last_100_batches, examples_per_second))
 
+class DynamicLearningRate(tf.keras.callbacks.Callback):
+  """Callback for Keras models."""
+
+  def __init__(self, batch_size, batch_denom, num_images,
+    boundary_epochs, decay_rates, base_lr=0.1, warmup=False):
+    """Callback for setting the learning rate.
+
+    Args:
+      batch_size: Total batch size.
+
+    """
+    super(DynamicLearningRate, self).__init__()
+    self._batch_size = batch_size
+    self._initial_learning_rate = base_lr * batch_size / batch_denom
+    self._batches_per_epoch = num_images / batch_size
+    self._warmup = warmup
+
+    # Reduce the learning rate at certain epochs.
+    # ImageNet: divide by 10 at epoch 30, 60, 80, and 90
+    self._boundaries = [int(self._batches_per_epoch * epoch) \
+      for epoch in boundary_epochs]
+    self._vals = [initial_learning_rate * decay for \
+      decay in decay_rates]
+
+  def on_train_begin(self, logs=None):
+    self._epoch = 0
+    self._steps = 0
+
+  def on_epoch_begin(self, epoch, logs=None):
+    self._epoch = epoch
+
+  def on_batch_begin(self, batch, logs=None):
+    global_step = self._epoch * self._batches_per_epoch + batch
+    lr = tf.train.piecewise_constant(global_step, self._boundaries, self._vals)
+    if self._warmup:
+      warmup_steps = int(self._batches_per_epoch * 5)
+      warmup_lr = (
+          self._initial_learning_rate *
+          tf.cast(global_step, tf.float32) / tf.cast(
+              warmup_steps, tf.float32))
+      lr_to_set = tf.cond(global_step < warmup_steps, \
+          lambda: warmup_lr, lambda: lr)
+    lr_to_set = lr
+
 
 def softmax_crossentropy_with_logits(y_true, y_pred):
   """A loss function replicating tf's sparse_softmax_cross_entropy
@@ -144,7 +188,7 @@ def run_imagenet_with_keras(flags_obj):
         parse_record_fn=imagenet_main.parse_record)
 
   # Set environment vars and session config
-  session_config = resnet_run_loop.set_environment_vars(flags_obj)
+  session_config = resnet_run_loop.set_environ_and_config(flags_obj)
   session = tf.Session(config=session_config)
   tf.keras.backend.set_session(session)
 
