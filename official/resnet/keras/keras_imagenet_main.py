@@ -111,7 +111,7 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
   def on_batch_begin(self, batch, logs=None):
     print("\n\n batch ", batch)
     global_step = self._epoch * self._batches_per_epoch + batch
-    # global_step = tf.cast(global_step, tf.float32)
+    global_step = tf.cast(global_step, tf.int32)
     # self._boundaries = tf.cast(self._boundaries, tf.float32)
     print("\n\n global_step ", type(global_step))
     lr = tf.train.piecewise_constant(global_step, self._boundaries, self._vals)
