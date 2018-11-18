@@ -74,6 +74,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
                         "'images_per_second': %f}" %
                         (batch, last_100_batches, examples_per_second))
 
+
 class DynamicLearningRate(tf.keras.callbacks.Callback):
   """Callback for Keras models."""
 
@@ -95,7 +96,7 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
     # ImageNet: divide by 10 at epoch 30, 60, 80, and 90
     self._boundaries = [int(self._batches_per_epoch * epoch) \
       for epoch in boundary_epochs]
-    self._vals = [initial_learning_rate * decay for \
+    self._vals = [self._initial_learning_rate * decay for \
       decay in decay_rates]
 
   def on_train_begin(self, logs=None):
@@ -104,8 +105,10 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
 
   def on_epoch_begin(self, epoch, logs=None):
     self._epoch = epoch
+    print("\n\n self._epoch ", self._epoch)
 
   def on_batch_begin(self, batch, logs=None):
+    print("\n\n batch ", batch)
     global_step = self._epoch * self._batches_per_epoch + batch
     lr = tf.train.piecewise_constant(global_step, self._boundaries, self._vals)
     if self._warmup:
@@ -117,10 +120,13 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
       lr_to_set = tf.cond(global_step < warmup_steps, \
           lambda: warmup_lr, lambda: lr)
     lr_to_set = lr
+    print("\n\n lr_to_set ", lr_to_set)
+    tf.keras.backend.set_value(self.model.optimizer.learning_rate,
+                               lr_to_set)
 
 
 def softmax_crossentropy_with_logits(y_true, y_pred):
-  """A loss function replicating tf's sparse_softmax_cross_entropy
+  """A loss function replicating tf's sparse_softmax_cross_entropy.
 
   Args:
     y_true: True labels. Tensor of shape [batch_size,]
@@ -219,13 +225,26 @@ def run_imagenet_with_keras(flags_obj):
 
   time_callback = TimeHistory(flags_obj.batch_size)
 
+  # Setting fine_tune to False.
+  warmup = True
+  base_lr = .128
+
+  lr_callback = DynamicLearningRate(
+      batch_size=flags_obj.batch_size,
+      batch_denom=256,
+      num_images=imagenet_main._NUM_IMAGES['train'],
+      boundary_epochs=[30, 60, 80, 90],
+      decay_rates=[1, 0.1, 0.01, 0.001, 1e-4],
+      warmup=warmup, base_lr=base_lr)
+
   model.fit(train_input_dataset,
             epochs=flags_obj.train_epochs,
             steps_per_epoch=steps_per_epoch,
-            callbacks=[time_callback],
+            callbacks=[time_callback, lr_callback],
             verbose=0)
 
-  num_eval_steps = imagenet_main._NUM_IMAGES['validation'] // flags_obj.batch_size
+  num_eval_steps = (imagenet_main._NUM_IMAGES['validation'] //
+                    flags_obj.batch_size)
   eval_output = model.evaluate(eval_input_dataset,
                                steps=num_eval_steps,
                                verbose=0)
