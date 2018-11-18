@@ -124,8 +124,10 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
               warmup_steps, tf.float32))
       lr_to_set = tf.cond(global_step < warmup_steps, \
           lambda: warmup_lr, lambda: lr)
-    lr_to_set = lr
-    print("\n\n lr_to_set ", tf.keras.backend.get_value(lr_to_set))
+    else:
+      lr_to_set = lr
+
+    lr_to_set = tf.keras.backend.get_value(lr_to_set)
     tf.keras.backend.set_value(self.model.optimizer.learning_rate,
                                lr_to_set)
 
