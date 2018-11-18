@@ -209,7 +209,7 @@ def run_imagenet_with_keras(flags_obj):
   # opt = tf.train.GradientDescentOptimizer(learning_rate=0.0001)
   # I am setting an initial LR of 0.001 since this will be reset
   # at the beginning of the training loop.
-  opt = gradient_descent_v2.GradientDescentOptimizer(
+  opt = gradient_descent_v2.SGD(
       learning_rate=0.001, momentum=0.9)
 
   strategy = distribution_utils.get_distribution_strategy(
