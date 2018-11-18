@@ -79,7 +79,8 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
   """Callback for Keras models."""
 
   def __init__(self, batch_size, batch_denom, num_images,
-    boundary_epochs, decay_rates, base_lr=0.1, warmup=False):
+               boundary_epochs, decay_rates,
+               base_lr=0.1, warmup=False):
     """Callback for setting the learning rate.
 
     Args:
@@ -110,6 +111,7 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
   def on_batch_begin(self, batch, logs=None):
     print("\n\n batch ", batch)
     global_step = self._epoch * self._batches_per_epoch + batch
+    global_step = tf.cast(global_step, tf.float32)
     lr = tf.train.piecewise_constant(global_step, self._boundaries, self._vals)
     if self._warmup:
       warmup_steps = int(self._batches_per_epoch * 5)
@@ -215,7 +217,7 @@ def run_imagenet_with_keras(flags_obj):
     tf.keras.backend.set_learning_phase(True)
 
   if flags_obj.eval_only:
-    tf.keras.backend.set_learning_phase(False)    
+    tf.keras.backend.set_learning_phase(False)
 
   model.compile(loss=softmax_crossentropy_with_logits,
                 optimizer=opt,
