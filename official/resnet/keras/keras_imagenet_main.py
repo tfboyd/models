@@ -205,7 +205,9 @@ def run_imagenet_with_keras(flags_obj):
   # Use Keras ResNet50 applications model and native keras APIs
   # initialize RMSprop optimizer
   # TODO(anjalisridhar): Move to using MomentumOptimizer.
-  opt = tf.train.GradientDescentOptimizer(learning_rate=0.0001)
+  # opt = tf.train.GradientDescentOptimizer(learning_rate=0.0001)
+  opt = tf.train.MomentumOptimizer(
+    learning_rate=learning_rate, momentum=momentum)
 
   strategy = distribution_utils.get_distribution_strategy(
       num_gpus=flags_obj.num_gpus)
