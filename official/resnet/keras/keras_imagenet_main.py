@@ -31,6 +31,7 @@ from official.resnet.keras import resnet_model
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import distribution_utils
+from tensorflow.python.keras.optimizer_v2 import gradient_descent_v2
 
 
 class TimeHistory(tf.keras.callbacks.Callback):
@@ -208,8 +209,8 @@ def run_imagenet_with_keras(flags_obj):
   # opt = tf.train.GradientDescentOptimizer(learning_rate=0.0001)
   # I am setting an initial LR of 0.001 since this will be reset
   # at the beginning of the training loop.
-  opt = tf.train.MomentumOptimizer(
-    learning_rate=0.001, momentum=0.9)
+  opt = gradient_descent_v2.GradientDescentOptimizer(
+      learning_rate=0.001, momentum=0.9)
 
   strategy = distribution_utils.get_distribution_strategy(
       num_gpus=flags_obj.num_gpus)
