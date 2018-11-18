@@ -31,7 +31,7 @@ from official.resnet.keras import resnet_model
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import distribution_utils
-from tensorflow.python.keras.optimizer_v2 import gradient_descent_v2
+from tensorflow.python.keras.optimizer_v2 import gradient_descent as gradient_descent_v2
 
 
 class TimeHistory(tf.keras.callbacks.Callback):
