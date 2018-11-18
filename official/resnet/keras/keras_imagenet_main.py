@@ -235,7 +235,7 @@ def run_imagenet_with_keras(flags_obj):
       batch_size=flags_obj.batch_size,
       batch_denom=256,
       num_images=imagenet_main._NUM_IMAGES['train'],
-      boundary_epochs=[30, 60, 80, 90],
+      boundary_epochs=[30.0, 60.0, 80.0, 90.0],
       decay_rates=[1, 0.1, 0.01, 0.001, 1e-4],
       warmup=warmup, base_lr=base_lr)
 
