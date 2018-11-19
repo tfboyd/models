@@ -233,6 +233,9 @@ def run_imagenet_with_keras(flags_obj):
 
   time_callback = TimeHistory(flags_obj.batch_size)
 
+  model_checkpoint_callback = ModelCheckpoint(filepath=flags_obj.model_dir)
+  tesorboard_callback = TensorBoard(log_dir=flags_obj.model_dir)
+
   # Setting fine_tune to False.
   warmup = True
   base_lr = .128
