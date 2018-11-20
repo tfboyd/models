@@ -129,6 +129,35 @@ class DynamicLearningRate(tf.keras.callbacks.Callback):
                                lr_to_set)
 
 
+def parse_record_keras(raw_record, is_training, dtype):
+  """Parses a record containing a training example of an image.
+
+  The input record is parsed into a label and image, and the image is passed
+  through preprocessing steps (cropping, flipping, and so on).
+
+  Args:
+    raw_record: scalar Tensor tf.string containing a serialized
+      Example protocol buffer.
+    is_training: A boolean denoting whether the input is for training.
+    dtype: Data type to use for input images.
+
+  Returns:
+    Tuple with processed image tensor and one-hot-encoded label tensor.
+  """
+  image_buffer, label, bbox = _parse_example_proto(raw_record)
+
+  image = imagenet_preprocessing.preprocess_image(
+      image_buffer=image_buffer,
+      bbox=bbox,
+      output_height=_DEFAULT_IMAGE_SIZE,
+      output_width=_DEFAULT_IMAGE_SIZE,
+      num_channels=_NUM_CHANNELS,
+      is_training=is_training)
+  image = tf.cast(image, dtype)
+  label = tf.sparse_to_dense(label, (imagenet_main._NUM_CLASSES,), 1)
+
+  return image, label
+
 def softmax_crossentropy_with_logits(y_true, y_pred):
   """A loss function replicating tf's sparse_softmax_cross_entropy.
 
@@ -187,7 +216,7 @@ def run_imagenet_with_keras(flags_obj):
         batch_size=per_device_batch_size,
         num_epochs=flags_obj.train_epochs,
         num_gpus=flags_obj.num_gpus,
-        parse_record_fn=imagenet_main.parse_record)
+        parse_record_fn=parse_record_keras)
 
     eval_input_dataset = imagenet_main.input_fn(
         False,
@@ -195,7 +224,7 @@ def run_imagenet_with_keras(flags_obj):
         batch_size=per_device_batch_size,
         num_epochs=flags_obj.train_epochs,
         num_gpus=flags_obj.num_gpus,
-        parse_record_fn=imagenet_main.parse_record)
+        parse_record_fn=parse_record_keras)
 
   # Set environment vars and session config
   session_config = resnet_run_loop.set_environ_and_config(flags_obj)
