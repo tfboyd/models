@@ -251,7 +251,8 @@ def run_imagenet_with_keras(flags_obj):
   model.fit(train_input_dataset,
             epochs=flags_obj.train_epochs,
             steps_per_epoch=steps_per_epoch,
-            callbacks=[time_callback, lr_callback],
+            callbacks=[time_callback, lr_callback,
+            tesorboard_callback,model_checkpoint_callback],
             verbose=0)
 
   num_eval_steps = (imagenet_main._NUM_IMAGES['validation'] //
