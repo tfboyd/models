@@ -194,6 +194,17 @@ class ShakespeareAccuracy(ShakespeareBenchmarkBase):
     FLAGS.enable_xla = True
     self._run_and_report_benchmark()
 
+  def benchmark_xla_1_gpu_bs_8(self):
+    """Benchmark 1 gpu w/xla."""
+    self._setup()
+    FLAGS.num_gpus = 1
+    FLAGS.training_data = self.train_data
+    FLAGS.batch_size = 8
+    FLAGS.train_epochs = 43
+    FLAGS.model_dir = ''
+    FLAGS.enable_xla = True
+    self._run_and_report_benchmark()
+
   def benchmark_8_gpu(self):
     """Benchmark 8 gpu.
 
