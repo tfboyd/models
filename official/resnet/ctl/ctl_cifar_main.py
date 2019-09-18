@@ -150,11 +150,11 @@ def hparam_run(flags_obj):
   HP_METRIC_EXP_PER_SEC = hp.Metric('exp_per_sec', display_name='Exp/Sec')
 
   global HP_BATCH_SIZE, HP_XLA, HP_LR, HP_FP16, HP_TF_FUNCTION, HP_SINGLE_L2_LOSS_OP
-  HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64, 128, 256, 1024]))
-  HP_XLA = hp.HParam('xla', hp.Discrete([False, True]))
-  HP_LR = hp.HParam('lr', hp.Discrete(['.1', 'scaled']))
-  HP_FP16 = hp.HParam('fp16', hp.Discrete([False, True]))
-  HP_TF_FUNCTION = hp.HParam('tf_function', hp.Discrete([True, False]))
+  HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([128]))
+  HP_XLA = hp.HParam('xla', hp.Discrete([False]))
+  HP_LR = hp.HParam('lr', hp.Discrete(['scaled']))
+  HP_FP16 = hp.HParam('fp16', hp.Discrete([False]))
+  HP_TF_FUNCTION = hp.HParam('tf_function', hp.Discrete([True]))
 
   with tf.summary.create_file_writer(flags_obj.model_dir).as_default():
     hp.hparams_config(
@@ -325,9 +325,9 @@ def run(flags_obj, hparams, hparam_dir=None):
         tf.summary.scalar('train_accuracy', training_accuracy.result(),
                           step=epoch)
         tf.summary.scalar('train_loss', train_loss, step=epoch)
-        tf.summary.scalar('lr', optimizer.lr, step=epoch)
-        tf.summary.scalar('exp_per_sec', time_callback.examples_per_second,
-                          step=epoch)
+        #tf.summary.scalar('lr', optimizer.lr, step=epoch)
+        #tf.summary.scalar('exp_per_sec', time_callback.examples_per_second,
+        #                  step=epoch)
 
       logging.info('Training loss: %s, accuracy: %s%% at epoch: %d',
                    train_loss.numpy(),
