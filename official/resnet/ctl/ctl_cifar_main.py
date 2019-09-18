@@ -325,9 +325,9 @@ def run(flags_obj, hparams, hparam_dir=None):
         tf.summary.scalar('train_accuracy', training_accuracy.result(),
                           step=epoch)
         tf.summary.scalar('train_loss', train_loss, step=epoch)
-        tf.summary.scalar('lr', optimizer.lr, step=epoch)
-        tf.summary.scalar('exp_per_sec', time_callback.examples_per_second,
-                          step=epoch)
+        # tf.summary.scalar('lr', optimizer.lr, step=epoch)
+        # tf.summary.scalar('exp_per_sec', time_callback.examples_per_second,
+        #                   step=epoch)
 
       logging.info('Training loss: %s, accuracy: %s%% at epoch: %d',
                    train_loss.numpy(),
@@ -349,9 +349,9 @@ def run(flags_obj, hparams, hparam_dir=None):
                    epoch)
 
     time_callback.on_train_end()
-    with train_summary_writer.as_default():
-      tf.summary.scalar('total_time', time_callback.train_total_time / 60,
-                        step=0)
+    #with train_summary_writer.as_default():
+    #  tf.summary.scalar('total_time', time_callback.train_total_time / 60,
+    #                    step=0)
 
 
 def main(_):
