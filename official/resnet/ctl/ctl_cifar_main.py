@@ -18,8 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import itertools
 import os
 import time
+
 
 from absl import app as absl_app
 from absl import flags
@@ -34,7 +36,6 @@ from official.vision.image_classification import resnet_cifar_model
 from official.utils.flags import core as flags_core
 from official.utils.logs import logger
 from official.utils.misc import distribution_utils
-from official.utils.misc import keras_utils
 from official.utils.misc import model_helpers
 
 
@@ -47,6 +48,8 @@ HP_BATCH_SIZE = hp.HParam('batch_size')
 HP_XLA = hp.HParam('xla')
 HP_LR = hp.HParam('lr')
 HP_FP16 = hp.HParam('fp16')
+HP_TF_FUNCTION = hp.HParam('tf_function')
+HP_SINGLE_L2_LOSS_OP = hp.HParam('single_l2_loss_op')
 
 class TimeHistory(tf.keras.callbacks.Callback):
   """Callback for Keras models."""
@@ -89,10 +92,7 @@ class TimeHistory(tf.keras.callbacks.Callback):
       self.start_time = timestamp
 
 
-def learning_rate_schedule(current_epoch,
-                           current_batch,
-                           batches_per_epoch,
-                           batch_size):
+def learning_rate_schedule(current_epoch, hparams):
   """Handles linear scaling rule and LR decay.
 
   Scale learning rate at epoch boundaries provided in LR_SCHEDULE by the
@@ -100,15 +100,16 @@ def learning_rate_schedule(current_epoch,
 
   Args:
     current_epoch: integer, current epoch indexed from 0.
-    current_batch: integer, current batch in the current epoch, indexed from 0.
-    batches_per_epoch: integer, number of steps in an epoch.
     batch_size: integer, total batch sized.
 
   Returns:
     Adjusted learning rate.
   """
-  del current_batch, batches_per_epoch  # not used
-  initial_learning_rate = common.BASE_LEARNING_RATE * batch_size / 128
+  if hparams[HP_LR] == 'scaled':
+    initial_learning_rate = (common.BASE_LEARNING_RATE * hparams[HP_BATCH_SIZE]
+                             / 128)
+  else:
+    initial_learning_rate = common.BASE_LEARNING_RATE
   learning_rate = initial_learning_rate
   for mult, start_epoch in LR_SCHEDULE:
     if current_epoch >= start_epoch:
@@ -118,130 +119,71 @@ def learning_rate_schedule(current_epoch,
   return learning_rate
 
 
-def build_stats(train_result, eval_result, time_callback):
-  """Normalizes and returns dictionary of stats.
-
-  Args:
-    train_result: The final loss at training time.
-    eval_result: Output of the eval step. Assumes first value is eval_loss and
-      second value is accuracy_top_1.
-    time_callback: Time tracking callback instance.
-
-  Returns:
-    Dictionary of normalized results.
-  """
-  stats = {}
-
-  if eval_result:
-    stats['eval_loss'] = eval_result[0]
-    stats['eval_acc'] = eval_result[1]
-
-    stats['train_loss'] = train_result[0]
-    stats['train_acc'] = train_result[1]
-
-  if time_callback:
-    timestamp_log = time_callback.timestamp_log
-    stats['step_timestamp_log'] = timestamp_log
-    stats['train_finish_time'] = time_callback.train_finish_time
-    if len(timestamp_log) > 1:
-      stats['avg_exp_per_second'] = (
-          time_callback.batch_size * time_callback.log_steps *
-          (len(time_callback.timestamp_log) - 1) /
-          (timestamp_log[-1].timestamp - timestamp_log[0].timestamp))
-
-  return stats
-
-
 def get_input_dataset(flags_obj, strategy, hparams):
   """Returns the test and train input datasets."""
   dtype = flags_core.get_tf_dtype(flags_obj)
-  if flags_obj.use_synthetic_data:
-    input_fn = common.get_synth_input_fn(
-        height=cifar_preprocessing.HEIGHT,
-        width=cifar_preprocessing.WIDTH,
-        num_channels=cifar_preprocessing.NUM_CHANNELS,
-        num_classes=cifar_preprocessing.NUM_CLASSES,
-        dtype=dtype,
-        drop_remainder=True)
-  else:
-    input_fn = cifar_preprocessing.input_fn
+  input_fn = cifar_preprocessing.input_fn
 
   train_ds = input_fn(
       is_training=True,
       data_dir=flags_obj.data_dir,
       batch_size=hparams[HP_BATCH_SIZE],
       parse_record_fn=cifar_preprocessing.parse_record,
-      datasets_num_private_threads=flags_obj.datasets_num_private_threads,
       dtype=dtype)
   train_ds = strategy.experimental_distribute_dataset(train_ds)
 
-  test_ds = None
-  if not flags_obj.skip_eval:
-    test_ds = input_fn(
-        is_training=False,
-        data_dir=flags_obj.data_dir,
-        batch_size=hparams[HP_BATCH_SIZE],
-        parse_record_fn=cifar_preprocessing.parse_record,
-        dtype=dtype)
-    test_ds = strategy.experimental_distribute_dataset(test_ds)
+  test_ds = input_fn(
+      is_training=False,
+      data_dir=flags_obj.data_dir,
+      batch_size=hparams[HP_BATCH_SIZE],
+      parse_record_fn=cifar_preprocessing.parse_record,
+      dtype=dtype)
+  test_ds = strategy.experimental_distribute_dataset(test_ds)
 
   return train_ds, test_ds
-
-
-def get_num_train_iterations(flags_obj, hparams):
-  """Returns the number of training stesps, train and test epochs."""
-  train_steps = (
-      cifar_preprocessing.NUM_IMAGES['train'] // hparams[HP_BATCH_SIZE])
-  train_epochs = flags_obj.train_epochs
-
-  eval_steps = (
-      cifar_preprocessing.NUM_IMAGES['validation'] // hparams[HP_BATCH_SIZE])
-
-  return train_steps, train_epochs, eval_steps
 
 
 def hparam_run(flags_obj):
 
   HP_METRIC_ACCURACY = hp.Metric('top_1_accuracy', display_name='Accuracy')
   HP_METRIC_TOTAL_TIME = hp.Metric('total_time', display_name='Total Time')
+  HP_METRIC_EXP_PER_SEC = hp.Metric('exp_per_sec', display_name='Exp/Sec')
+
+  global HP_BATCH_SIZE, HP_XLA, HP_LR, HP_FP16, HP_TF_FUNCTION, HP_SINGLE_L2_LOSS_OP
+  HP_BATCH_SIZE = hp.HParam('batch_size', hp.Discrete([64, 128, 256, 1024]))
+  HP_XLA = hp.HParam('xla', hp.Discrete([False, True]))
+  HP_LR = hp.HParam('lr', hp.Discrete(['.1', 'scaled']))
+  HP_FP16 = hp.HParam('fp16', hp.Discrete([False, True]))
+  HP_TF_FUNCTION = hp.HParam('tf_function', hp.Discrete([True, False]))
 
   with tf.summary.create_file_writer(flags_obj.model_dir).as_default():
     hp.hparams_config(
-        hparams=[HP_BATCH_SIZE, HP_XLA, HP_LR, HP_FP16],
-        metrics=[HP_METRIC_ACCURACY, HP_METRIC_TOTAL_TIME],
+        hparams=[HP_BATCH_SIZE, HP_XLA, HP_LR, HP_FP16, HP_TF_FUNCTION,
+                 HP_SINGLE_L2_LOSS_OP],
+        metrics=[HP_METRIC_ACCURACY, HP_METRIC_TOTAL_TIME,
+                 HP_METRIC_EXP_PER_SEC],
     )
 
-  hparams = {
-      HP_BATCH_SIZE: 32,
-      HP_XLA: False,
-      HP_LR: -1,
-      HP_FP16: False
-  }
-  run(flags_obj, hparams, hparam_dir='hparam_combo_1')
+  hparam_lists = [HP_BATCH_SIZE.domain.values,
+                  HP_XLA.domain.values,
+                  HP_LR.domain.values,
+                  HP_FP16.domain.values,
+                  HP_TF_FUNCTION.domain.values]
 
-  hparams = {
-      HP_BATCH_SIZE: 128,
-      HP_XLA: False,
-      HP_LR: -1,
-      HP_FP16: False
-  }
-  run(flags_obj, hparams, hparam_dir='hparam_combo_2')
-
-  hparams = {
-      HP_BATCH_SIZE: 256,
-      HP_XLA: False,
-      HP_LR: -1,
-      HP_FP16: False
-  }
-  run(flags_obj, hparams, hparam_dir='hparam_combo_3')
-
-  hparams = {
-      HP_BATCH_SIZE: 1024,
-      HP_XLA: False,
-      HP_LR: -1,
-      HP_FP16: False
-  }
-  run(flags_obj, hparams, hparam_dir='hparam_combo_4')
+  hparam_product = list(itertools.product(*hparam_lists))
+  i = 0
+  for combination in hparam_product:
+    print('Running {} of {} combinations'.format(i, len(hparam_product)))
+    print(combination)
+    hparams = {
+        HP_BATCH_SIZE: combination[0],
+        HP_XLA: combination[1],
+        HP_LR: combination[2],
+        HP_FP16: combination[3],
+        HP_TF_FUNCTION: combination[4],
+    }
+    run(flags_obj, hparams, hparam_dir='hparam_combo_{}'.format(i))
+    i += 1
 
 
 def run(flags_obj, hparams, hparam_dir=None):
@@ -256,9 +198,13 @@ def run(flags_obj, hparams, hparam_dir=None):
   Returns:
     Dictionary of training and eval stats.
   """
-  keras_utils.set_session_config(
-      enable_eager=flags_obj.enable_eager,
-      enable_xla=hparams[HP_XLA])
+  if hparams[HP_XLA]:
+    tf.config.optimizer.set_jit(True)
+    # Disable PinToHostOptimizer in grappler when enabling XLA because it
+    # causes OOM and performance regression.
+    tf.config.optimizer.set_experimental_options(
+        {'pin_to_host_optimization': False}
+    )
 
   # Sets summary output directories for tensorboard.
   train_log_dir = os.path.join(flags_obj.model_dir, hparam_dir)
@@ -266,22 +212,23 @@ def run(flags_obj, hparams, hparam_dir=None):
   with train_summary_writer.as_default():
     hp.hparams(hparams)  # record the values used in this trial
 
-  # TODO(anj-s): Set data_format without using Keras.
-  data_format = flags_obj.data_format
-  if data_format is None:
-    data_format = ('channels_first'
-                   if tf.test.is_built_with_cuda() else 'channels_last')
-  tf.keras.backend.set_image_data_format(data_format)
+  tf.keras.backend.set_image_data_format('channels_first')
 
   strategy = distribution_utils.get_distribution_strategy(
       distribution_strategy='default',
       num_gpus=flags_obj.num_gpus)
 
   train_ds, test_ds = get_input_dataset(flags_obj, strategy, hparams)
-  train_steps, train_epochs, eval_steps = get_num_train_iterations(flags_obj,
-                                                                   hparams)
 
-  time_callback = TimeHistory(hparams[HP_BATCH_SIZE], flags_obj.log_steps)
+  train_steps = (
+      cifar_preprocessing.NUM_IMAGES['train'] // hparams[HP_BATCH_SIZE])
+
+  eval_steps = (
+      cifar_preprocessing.NUM_IMAGES['validation'] // hparams[HP_BATCH_SIZE])
+
+  train_epochs = flags_obj.train_epochs
+
+  time_callback = TimeHistory(hparams[HP_BATCH_SIZE], 50)
 
   strategy_scope = distribution_utils.get_strategy_scope(strategy)
   with strategy_scope:
@@ -292,13 +239,11 @@ def run(flags_obj, hparams, hparam_dir=None):
         learning_rate=common.BASE_LEARNING_RATE, momentum=0.9,
         nesterov=True)
 
-    if flags_obj.fp16_implementation == 'graph_rewrite':
-      if not flags_obj.use_tf_function:
-        raise ValueError('--fp16_implementation=graph_rewrite requires '
-                         '--use_tf_function to be true')
-      loss_scale = flags_core.get_loss_scale(flags_obj, default_for_fp16=128)
+    if hparams[HP_FP16]:
+      if not hparams[HP_TF_FUNCTION]:
+        raise ValueError('FP16 requires tf_function to be true')
       optimizer = tf.train.experimental.enable_mixed_precision_graph_rewrite(
-          optimizer, loss_scale)
+          optimizer, 'dynamic')
 
     training_accuracy = tf.keras.metrics.CategoricalAccuracy(
         'training_accuracy', dtype=tf.float32)
@@ -320,27 +265,16 @@ def run(flags_obj, hparams, hparam_dir=None):
               labels, logits)
           loss = tf.reduce_sum(prediction_loss) * (1.0/ hparams[HP_BATCH_SIZE])
           num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
-
-          if flags_obj.single_l2_loss_op:
-            filtered_variables = [
-                tf.reshape(v, (-1,))
-                for v in trainable_variables
-                if 'bn' not in v.name
-            ]
-            l2_loss = resnet_cifar_model.L2_WEIGHT_DECAY * 2 * tf.nn.l2_loss(
-                tf.concat(filtered_variables, axis=0))
-            loss += (l2_loss / num_replicas)
-          else:
-            loss += (tf.reduce_sum(model.losses) / num_replicas)
+          loss += (tf.reduce_sum(model.losses) / num_replicas)
 
           # Scale the loss
-          if flags_obj.dtype == 'fp16':
+          if hparams[HP_FP16]:
             loss = optimizer.get_scaled_loss(loss)
 
         grads = tape.gradient(loss, trainable_variables)
 
         # Unscale the grads
-        if flags_obj.dtype == 'fp16':
+        if hparams[HP_FP16]:
           grads = optimizer.get_unscaled_gradients(grads)
 
         optimizer.apply_gradients(zip(grads, trainable_variables))
@@ -368,7 +302,7 @@ def run(flags_obj, hparams, hparam_dir=None):
       else:
         step_fn(test_ds_inputs)
 
-    if flags_obj.use_tf_function:
+    if hparams[HP_TF_FUNCTION]:
       train_step = tf.function(train_step)
       test_step = tf.function(test_step)
 
@@ -380,8 +314,7 @@ def run(flags_obj, hparams, hparam_dir=None):
       training_accuracy.reset_states()
 
       for step in range(train_steps):
-        optimizer.lr = learning_rate_schedule(
-            epoch, step, train_steps, hparams[HP_BATCH_SIZE])
+        optimizer.lr = learning_rate_schedule(epoch, hparams)
 
         time_callback.on_batch_begin(step+epoch*train_steps)
         total_loss += train_step(next(train_iter))
@@ -393,6 +326,8 @@ def run(flags_obj, hparams, hparam_dir=None):
                           step=epoch)
         tf.summary.scalar('train_loss', train_loss, step=epoch)
         tf.summary.scalar('lr', optimizer.lr, step=epoch)
+        tf.summary.scalar('exp_per_sec', time_callback.examples_per_second,
+                          step=epoch)
 
       logging.info('Training loss: %s, accuracy: %s%% at epoch: %d',
                    train_loss.numpy(),
@@ -415,7 +350,7 @@ def run(flags_obj, hparams, hparam_dir=None):
 
     time_callback.on_train_end()
     with train_summary_writer.as_default():
-      tf.summary.scalar('total_time', time_callback.train_total_time,
+      tf.summary.scalar('total_time', time_callback.train_total_time / 60,
                         step=0)
 
 

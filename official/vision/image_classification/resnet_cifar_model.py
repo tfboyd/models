@@ -40,8 +40,7 @@ def identity_building_block(input_tensor,
                             kernel_size,
                             filters,
                             stage,
-                            block,
-                            training=None):
+                            block):
   """The identity block is the block that has no conv layer at shortcut.
 
   Arguments:
@@ -51,8 +50,6 @@ def identity_building_block(input_tensor,
     filters: list of integers, the filters of 3 conv layer at main path
     stage: integer, current stage label, used for generating layer names
     block: current block label, used for generating layer names
-    training: Only used if training keras model with Estimator.  In other
-      scenarios it is handled automatically.
 
   Returns:
     Output tensor for the block.
@@ -72,7 +69,7 @@ def identity_building_block(input_tensor,
                     name=conv_name_base + '2a')(input_tensor)
   x = layers.BatchNormalization(
       axis=bn_axis, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
-      name=bn_name_base + '2a')(x, training=training)
+      name=bn_name_base + '2a')(x)
   x = layers.Activation('relu')(x)
 
   x = layers.Conv2D(filters2, kernel_size,
@@ -82,8 +79,7 @@ def identity_building_block(input_tensor,
                     name=conv_name_base + '2b')(x)
   x = layers.BatchNormalization(
       axis=bn_axis, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
-      name=bn_name_base + '2b')(x, training=training)
-
+      name=bn_name_base + '2b')(x)
   x = layers.add([x, input_tensor])
   x = layers.Activation('relu')(x)
   return x
@@ -94,8 +90,7 @@ def conv_building_block(input_tensor,
                         filters,
                         stage,
                         block,
-                        strides=(2, 2),
-                        training=None):
+                        strides=(2, 2)):
   """A block that has a conv layer at shortcut.
 
   Arguments:
@@ -106,8 +101,6 @@ def conv_building_block(input_tensor,
     stage: integer, current stage label, used for generating layer names
     block: current block label, used for generating layer names
     strides: Strides for the first conv layer in the block.
-    training: Only used if training keras model with Estimator.  In other
-      scenarios it is handled automatically.
 
   Returns:
     Output tensor for the block.
@@ -131,7 +124,7 @@ def conv_building_block(input_tensor,
                     name=conv_name_base + '2a')(input_tensor)
   x = layers.BatchNormalization(
       axis=bn_axis, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
-      name=bn_name_base + '2a')(x, training=training)
+      name=bn_name_base + '2a')(x)
   x = layers.Activation('relu')(x)
 
   x = layers.Conv2D(filters2, kernel_size, padding='same', use_bias=False,
@@ -140,7 +133,7 @@ def conv_building_block(input_tensor,
                     name=conv_name_base + '2b')(x)
   x = layers.BatchNormalization(
       axis=bn_axis, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
-      name=bn_name_base + '2b')(x, training=training)
+      name=bn_name_base + '2b')(x)
 
   shortcut = layers.Conv2D(filters2, (1, 1), strides=strides, use_bias=False,
                            kernel_initializer='he_normal',
@@ -148,7 +141,7 @@ def conv_building_block(input_tensor,
                            name=conv_name_base + '1')(input_tensor)
   shortcut = layers.BatchNormalization(
       axis=bn_axis, momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
-      name=bn_name_base + '1')(shortcut, training=training)
+      name=bn_name_base + '1')(shortcut)
 
   x = layers.add([x, shortcut])
   x = layers.Activation('relu')(x)
@@ -160,8 +153,7 @@ def resnet_block(input_tensor,
                  kernel_size,
                  filters,
                  stage,
-                 conv_strides=(2, 2),
-                 training=None):
+                 conv_strides=(2, 2)):
   """A block which applies conv followed by multiple identity blocks.
 
   Arguments:
@@ -173,23 +165,20 @@ def resnet_block(input_tensor,
     filters: list of integers, the filters of 3 conv layer at main path
     stage: integer, current stage label, used for generating layer names
     conv_strides: Strides for the first conv layer in the block.
-    training: Only used if training keras model with Estimator.  In other
-      scenarios it is handled automatically.
 
   Returns:
     Output tensor after applying conv and identity blocks.
   """
 
   x = conv_building_block(input_tensor, kernel_size, filters, stage=stage,
-                          strides=conv_strides, block='block_0',
-                          training=training)
+                          strides=conv_strides, block='block_0')
   for i in range(size - 1):
     x = identity_building_block(x, kernel_size, filters, stage=stage,
-                                block='block_%d' % (i + 1), training=training)
+                                block='block_%d' % (i + 1))
   return x
 
 
-def resnet(num_blocks, classes=10, training=None):
+def resnet(num_blocks, classes=10):
   """Instantiates the ResNet architecture.
 
   Arguments:
@@ -200,8 +189,6 @@ def resnet(num_blocks, classes=10, training=None):
       convolutional layer and the pooling layer towards the end, this brings
       the total size of the network to (6*num_blocks + 2)
     classes: optional number of classes to classify images into
-    training: Only used if training keras model with Estimator.  In other
-    scenarios it is handled automatically.
 
   Returns:
     A Keras model instance.
@@ -228,17 +215,17 @@ def resnet(num_blocks, classes=10, training=None):
   x = layers.BatchNormalization(axis=bn_axis,
                                 momentum=BATCH_NORM_DECAY,
                                 epsilon=BATCH_NORM_EPSILON,
-                                name='bn_conv1',)(x, training=training)
+                                name='bn_conv1',)(x)
   x = layers.Activation('relu')(x)
 
   x = resnet_block(x, size=num_blocks, kernel_size=3, filters=[16, 16],
-                   stage=2, conv_strides=(1, 1), training=training)
+                   stage=2, conv_strides=(1, 1))
 
   x = resnet_block(x, size=num_blocks, kernel_size=3, filters=[32, 32],
-                   stage=3, conv_strides=(2, 2), training=training)
+                   stage=3, conv_strides=(2, 2))
 
   x = resnet_block(x, size=num_blocks, kernel_size=3, filters=[64, 64],
-                   stage=4, conv_strides=(2, 2), training=training)
+                   stage=4, conv_strides=(2, 2))
 
   rm_axes = [1, 2] if backend.image_data_format() == 'channels_last' else [2, 3]
   x = layers.Lambda(lambda x: backend.mean(x, rm_axes), name='reduce_mean')(x)
